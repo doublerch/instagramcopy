@@ -1,90 +1,42 @@
 import React from 'react';
-import css from './Home.module.css';
-import timespan from 'utils/timespan.js';
-import publicUrl from 'utils/publicUrl.js';
+import Post from './Post';
 
+function Home(props) {
 
-/*
-fetch ('./components/post.json')
-.then (response => {
-    return response.json();
-}).then(data => {
-    console.log(data);
-    post = data;
+  const {store} = props; // retrieve store
 
-  });
-  */
-let posts = {
-	user:{
-		id:"judy",
-		photo:"/assets/user1.png",
-	},
-	post:{
-		id:"post-1",
-    userId:"judy",
-    photo:"/assets/post1.png",
-    desc:"#zootopia #excited",
-		datetime: "2020-02-09T22:45:28Z"
-	},
-	likes: {
-		self: true,
-    count:1,
-    heart: "/assets/unlike.svg"
-	},
-	comments:[
-		{
-      userId:"nick",
-      text:"Welcome to Zootopia!"
-    },
-    {
-        userId:"judy",
-        text:"Thanks!😁Looking forward to meeting you!"
-    }
-	]
+  function findUser(post){
+    return store.users.find(user=>user.id===post.userId);
+  }
+  
+  function findComments(post){
+  return store.comments.filter(comment=>comment.postId===post.id);
+  }
+  
+  function findLikes(post){
+  let postLikes = store.likes.filter(like=>like.postId===post.id);
+  return {
+    self: postLikes.some(like=> like.userId===store.currentUserId),
+    count: postLikes.length
+  }
 }
-
-function Home() {
-    return(
-      <section id="feed" >
-        <div className={css.row}>
-       <div className={css.col-6}>
-      <div style={{paddingTop:34}}>
-        <span ><img className={css.profile} src={posts.user.photo}alt="user1"/>          {posts.user.id}</span>
-      </div>
-
-      <div style={{paddingTop:22,}}>
-        <img style={{width:'50vh'}} className={css.post} src={posts.post.photo} alt="post1"/>
-      </div>
-
-      <div>
-        <button>
-          <img src={posts.likes.heart} alt="like"/>  <strong>{posts.likes.count} likes</strong>
-        </button>
-        <button>
-          <img src={publicUrl('/assets/comment.svg')} alt='Comment Action'/> 
-        </button>
-        
-      </div>
-
-      <br></br>
-      <div>
-        <span><strong>{posts.user.id}</strong>   {posts.post.desc}</span>
-      </div>
-      <div>
-        <span><strong>{posts.comments[0].userId}</strong>    {posts.comments[0].text}</span>
-      </div>
-      <div>
-        <span><strong>{posts.comments[1].userId}</strong>    {posts.comments[1].text}</span>
-      </div>
-      </div> 
-      </div>
-      <time className={css.time}>
-                    {timespan(posts.post.datetime).toUpperCase()} AGO
-      </time>
-      </section>
-  );
+return (
+  <div>
+    {store.posts.sort((a,b)=>new Date(b.datetime) - new Date(a.datetime))
+    .map(post=>
+      <Post
+        key={post.id}
+        user={findUser(post, store)}
+        post={post}
+        comments={findComments(post, store)}
+        likes={findLikes(post, store)}
+        onLike={props.onLike} 
+        onUnlike={props.onUnlike}
+        onComment={props.onComment} 
+      />)}
+  </div>
+);
 }
-
 
 
 export default Home;
